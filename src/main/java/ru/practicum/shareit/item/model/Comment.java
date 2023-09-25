@@ -1,26 +1,30 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ITEMS")
+@Table(name = "COMMENTS")
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Item {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String description;
-    @Column(name = "IS_AVAILABLE")
-    private Boolean isAvailable;
+    private String text;
+    @CreationTimestamp
+    private LocalDateTime created;
     @ManyToOne(fetch = FetchType.LAZY) //use only id
-    @JoinColumn(name = "OWNER_ID")
-    private User owner;
+    @JoinColumn(name = "ITEM_ID")
+    private Item item;
+    @ManyToOne
+    @JoinColumn(name = "AUTHOR_ID")
+    private User author;
 }
