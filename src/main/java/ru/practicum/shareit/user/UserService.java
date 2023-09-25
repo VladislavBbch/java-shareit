@@ -2,14 +2,12 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.ObjectExistException;
 import ru.practicum.shareit.exception.ObjectNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,38 +17,36 @@ public class UserService {
 
     public UserDto createUser(UserDto userDto) {
         User user = userMapper.toUser(userDto);
-        checkUserEmail(user);
-        return userMapper.toUserDto(userRepository.create(user));
+        return userMapper.toUserDto(userRepository.save(user));
     }
 
     public List<UserDto> getUsers() {
-        return userMapper.toUserDto(userRepository.read());
+        return userMapper.toUserDto(userRepository.findAll());
     }
 
     public UserDto getUserById(Long userId) {
-        User user = userRepository.getById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ObjectNotFoundException("Несуществующий id пользователя: " + userId));
         return userMapper.toUserDto(user);
     }
 
     public UserDto updateUser(Long id, UserDto userDto) {
-        getUserById(id);
+        User existingUser = userMapper.toUser(getUserById(id));
         User user = userMapper.toUser(userDto, id);
-        if (user.getEmail() != null) {
-            checkUserEmail(user);
+
+        String email = user.getEmail();
+        if (email != null && !email.isBlank()) {
+            existingUser.setEmail(email);
         }
-        return userMapper.toUserDto(userRepository.update(user));
+        String name = user.getName();
+        if (name != null && !name.isBlank()) {
+            existingUser.setName(name);
+        }
+        return userMapper.toUserDto(userRepository.save(existingUser));
     }
 
     public void deleteUser(Long userId) {
         getUserById(userId);
-        userRepository.delete(userId);
-    }
-
-    private void checkUserEmail(User user) {
-        Optional<User> existingUser = userRepository.getByEmail(user.getEmail());
-        if (existingUser.isPresent() && !Objects.equals(existingUser.get().getId(), user.getId())) {
-            throw new ObjectExistException("Пользователь с данным email: '" + user.getEmail() + "' уже существует");
-        }
+        userRepository.deleteById(userId);
     }
 }

@@ -4,18 +4,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @Builder(toBuilder = true)
-public class ItemDto {
+public class ItemDtoResponse {
     private final Long id;
-    @NotBlank
     private String name;
-    @NotBlank
     private String description;
-    @NotNull
     @JsonProperty("available")
     private Boolean isAvailable;
+    private Booking lastBooking;
+    private Booking nextBooking;
+    private List<CommentDtoResponse> comments;
+
+    @Data
+    @Builder(toBuilder = true)
+    static class Booking {
+        Long id;
+        Long bookerId;
+    }
 }
