@@ -36,17 +36,7 @@ public class BookingMapper {
     }
 
     public BookingDtoResponse toBookingDto(Booking booking) {
-        return BookingDtoResponse.builder()
-                .id(booking.getId())
-                .start(booking.getStart())
-                .end(booking.getEnd())
-                .status(booking.getStatus())
-                .booker(BookingDtoResponse.Booker.builder().id(booking.getBooker().getId()).build())
-                .item(BookingDtoResponse.Item.builder()
-                        .id(booking.getItem().getId())
-                        .name(booking.getItem().getName())
-                        .build())
-                .build();
+        return toBookingDto(booking, booking.getItem());
     }
 
     public List<BookingDtoResponse> toBookingDto(List<Booking> bookings) {

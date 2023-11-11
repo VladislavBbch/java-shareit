@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.PageRequestByElement;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -39,9 +40,10 @@ public class ItemService {
         return itemMapper.toItemDto(itemRepository.save(item));
     }
 
-    public List<ItemDtoResponse> getItems(Long userId) {
+    public List<ItemDtoResponse> getItems(Long userId, Integer from, Integer size) {
         checkUser(userId);
-        List<Item> items = itemRepository.findAllByOwnerIdOrderById(userId);
+        List<Item> items = itemRepository.findAllByOwnerIdOrderById(userId,
+                PageRequestByElement.of(from, size));
         if (items.size() > 0) {
             List<Long> ids = items.stream().map(Item::getId).collect(toList());
             Map<Long, List<Booking>> itemsBookings = bookingRepository
@@ -63,7 +65,7 @@ public class ItemService {
         if (userId.equals(item.getOwner().getId())) {
             List<Booking> bookings = bookingRepository
                     .findAllByItemIdAndStatus(itemId, BookingStatus.APPROVED, Sort.by(Sort.Direction.ASC, "start"));
-            return itemMapper.toItemDto(item, bookings, comments);
+            return itemMapper.toItemDto(item, comments, bookings);
         }
         return itemMapper.toItemDto(item, comments);
     }
@@ -91,7 +93,7 @@ public class ItemService {
         }
         List<Booking> bookings = bookingRepository
                 .findAllByItemIdAndStatus(id, BookingStatus.APPROVED, Sort.by(Sort.Direction.ASC, "start"));
-        return itemMapper.toItemDto(itemRepository.save(existingItem), bookings, List.of());
+        return itemMapper.toItemDto(itemRepository.save(existingItem), List.of(), bookings);
     }
 
     public void deleteItem(Long userId, Long itemId) {
@@ -101,13 +103,14 @@ public class ItemService {
         itemRepository.deleteByIdAndOwnerId(itemId, userId);
     }
 
-    public List<ItemDtoResponse> searchItems(Long userId, String text) {
+    public List<ItemDtoResponse> searchItems(Long userId, String text, Integer from, Integer size) {
         if (text.isBlank()) {
             return List.of();
         }
         checkUser(userId);
         text = "%" + text + "%";
-        return itemMapper.toItemDto(itemRepository.findAllByIsAvailableAndTextInNameOrDescription(text));
+        return itemMapper.toItemDto(itemRepository.findAllByIsAvailableAndTextInNameOrDescription(text,
+                PageRequestByElement.of(from, size)));
     }
 
     @Transactional

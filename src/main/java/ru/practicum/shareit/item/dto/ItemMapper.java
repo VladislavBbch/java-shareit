@@ -18,13 +18,7 @@ public class ItemMapper {
     private final CommentMapper commentMapper;
 
     public Item toItem(ItemDtoRequest itemDto, Long ownerId) {
-        return Item.builder()
-                .id(itemDto.getId())
-                .name(itemDto.getName())
-                .description(itemDto.getDescription())
-                .isAvailable(itemDto.getIsAvailable())
-                .owner(User.builder().id(ownerId).build())
-                .build();
+        return toItem(itemDto, ownerId, itemDto.getId());
     }
 
     public Item toItem(ItemDtoRequest itemDto, Long ownerId, Long id) {
@@ -34,42 +28,33 @@ public class ItemMapper {
                 .description(itemDto.getDescription())
                 .isAvailable(itemDto.getIsAvailable())
                 .owner(User.builder().id(ownerId).build())
+                .requestId(itemDto.getRequestId())
                 .build();
     }
 
     public ItemDtoResponse toItemDto(Item item) {
-        return ItemDtoResponse.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .isAvailable(item.getIsAvailable())
-                .build();
+        return toItemDto(item, List.of());
     }
 
     public ItemDtoResponse toItemDto(Item item, List<Comment> comments) {
-        return ItemDtoResponse.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .isAvailable(item.getIsAvailable())
-                .comments(comments.size() > 0 ? commentMapper.toCommentDto(comments) : List.of())
-                .build();
+        return toItemDto(item, comments, List.of());
     }
 
-    public ItemDtoResponse toItemDto(Item item, List<Booking> bookings, List<Comment> comments) {
+    public ItemDtoResponse toItemDto(Item item, List<Comment> comments, List<Booking> bookings) {
         ItemDtoResponse.Booking lastBooking = null;
         ItemDtoResponse.Booking nextBooking = null;
 
         if (bookings.size() > 0) {
             LocalDateTime now = LocalDateTime.now();
-            if (bookings.size() == 1) {
+            if (bookings.get(0).getStart().isAfter(now)) {
                 Booking booking = bookings.get(0);
-                if (booking.getStart().isBefore(now)) {
-                    lastBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
-                } else {
-                    nextBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
-                }
-            } else {
+                nextBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
+            }
+            if (bookings.get(bookings.size() - 1).getStart().isBefore(now)) {
+                Booking booking = bookings.get(bookings.size() - 1);
+                lastBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
+            }
+            if (nextBooking == null && lastBooking == null) {
                 for (int i = 0; i < bookings.size(); i++) {
                     if (i + 1 < bookings.size()) {
                         if (bookings.get(i).getStart().isBefore(now) && bookings.get(i + 1).getStart().isAfter(now)) {
@@ -78,13 +63,6 @@ public class ItemMapper {
                             nextBooking = new ItemDtoResponse.Booking(bookings.get(i + 1).getId(),
                                     bookings.get(i + 1).getBooker().getId());
                             break;
-                        }
-                    } else {
-                        Booking booking = bookings.get(i);
-                        if (booking.getStart().isBefore(now)) {
-                            lastBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
-                        } else {
-                            nextBooking = new ItemDtoResponse.Booking(booking.getId(), booking.getBooker().getId());
                         }
                     }
                 }
@@ -98,6 +76,7 @@ public class ItemMapper {
                 .lastBooking(lastBooking)
                 .nextBooking(nextBooking)
                 .comments(comments.size() > 0 ? commentMapper.toCommentDto(comments) : List.of())
+                .requestId(item.getRequestId())
                 .build();
     }
 
@@ -112,8 +91,8 @@ public class ItemMapper {
                                            Map<Long, List<Comment>> itemsComments) {
         return items.stream()
                 .map(item -> toItemDto(item,
-                        itemsBookings.getOrDefault(item.getId(), List.of()),
-                        itemsComments.getOrDefault(item.getId(), List.of())))
+                        itemsComments.getOrDefault(item.getId(), List.of()),
+                        itemsBookings.getOrDefault(item.getId(), List.of())))
                 .collect(Collectors.toList());
     }
 }

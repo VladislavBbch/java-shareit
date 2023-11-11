@@ -9,11 +9,7 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
     public User toUser(UserDto userDto) {
-        return User.builder()
-                .id(userDto.getId())
-                .email(userDto.getEmail())
-                .name(userDto.getName())
-                .build();
+        return toUser(userDto, userDto.getId());
     }
 
     public User toUser(UserDto userDto, Long id) {

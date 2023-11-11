@@ -1,7 +1,6 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,14 +31,6 @@ public class ErrorHandler {
     public ErrorResponse handleNotFoundException(final RuntimeException e) {
         log.error("Объект не найден {}", e.getMessage(), e);
         return new ErrorResponse("Объект не найден", e.getMessage());
-    }
-
-    @ExceptionHandler({ObjectExistException.class,
-            DuplicateKeyException.class})
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleExistException(final RuntimeException e) {
-        log.error("Объект существует {}", e.getMessage(), e);
-        return new ErrorResponse("Объект существует", e.getMessage());
     }
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class})
