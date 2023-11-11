@@ -14,18 +14,23 @@ import ru.practicum.shareit.item.dto.ItemDtoResponse;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping(path = "/items")
 @RequiredArgsConstructor
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<ItemDtoResponse> getItems(@RequestHeader(Constant.HEADER_USER_ID) Long userId) {
-        return itemService.getItems(userId);
+    public List<ItemDtoResponse> getItems(@RequestHeader(Constant.HEADER_USER_ID) Long userId,
+                                          @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                          @RequestParam(defaultValue = "10") @Min(1) @Max(30) Integer size) {
+        return itemService.getItems(userId, from, size);
     }
 
     @GetMapping("/{id}")
@@ -67,9 +72,11 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDtoResponse> searchItems(@RequestHeader(Constant.HEADER_USER_ID) Long userId,
-                                             @RequestParam String text) {
+                                             @RequestParam String text,
+                                             @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                             @RequestParam(defaultValue = "10") @Min(1) @Max(30) Integer size) {
         log.info("Начало обработки запроса на поиск вещей по названию: {} для пользователя: {}", text, userId);
-        List<ItemDtoResponse> items = itemService.searchItems(userId, text);
+        List<ItemDtoResponse> items = itemService.searchItems(userId, text, from, size);
         log.info("Окончание обработки запроса на поиск вещей");
         return items;
     }

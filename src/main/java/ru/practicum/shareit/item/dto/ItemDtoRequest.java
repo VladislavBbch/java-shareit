@@ -14,6 +14,7 @@ import javax.validation.constraints.Size;
 @Builder(toBuilder = true)
 public class ItemDtoRequest {
     private final Long id;
+    private Long requestId;
     @Size(max = 255, groups = {Create.class, Update.class})
     @NotBlank(groups = {Create.class})
     private String name;

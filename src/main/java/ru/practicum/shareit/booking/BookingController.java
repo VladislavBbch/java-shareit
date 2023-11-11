@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.Constant;
 import ru.practicum.shareit.booking.dto.BookingDtoRequest;
@@ -9,12 +10,15 @@ import ru.practicum.shareit.booking.dto.BookingDtoResponse;
 import ru.practicum.shareit.booking.model.BookingState;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
+@Validated
 public class BookingController {
     private final BookingService bookingService;
 
@@ -39,14 +43,18 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDtoResponse> getBookings(@RequestHeader(Constant.HEADER_USER_ID) Long bookerId,
-                                                @RequestParam(defaultValue = "ALL") BookingState state) {
-        return bookingService.getBookings(bookerId, state);
+                                                @RequestParam(defaultValue = "ALL") BookingState state,
+                                                @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                @RequestParam(defaultValue = "10") @Min(1) @Max(30) Integer size) {
+        return bookingService.getBookings(bookerId, state, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingDtoResponse> getOwnerBookings(@RequestHeader(Constant.HEADER_USER_ID) Long ownerId,
-                                                     @RequestParam(defaultValue = "ALL") BookingState state) {
-        return bookingService.getOwnerBookings(ownerId, state);
+                                                     @RequestParam(defaultValue = "ALL") BookingState state,
+                                                     @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                     @RequestParam(defaultValue = "10") @Min(1) @Max(30) Integer size) {
+        return bookingService.getOwnerBookings(ownerId, state, from, size);
     }
 
     @GetMapping("/{id}")
